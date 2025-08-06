@@ -10,12 +10,14 @@ def read_fasta(file_path):
     return sequence
 
 
-parser = argparse.ArgumentParser(description="生成fusion相关序列")
+parser = argparse.ArgumentParser(description="生成fusion相关span序列")
 parser.add_argument('-f', '--fasta', required=True, help='输入的Fasta文件路径')
 parser.add_argument('-n', '--name', required=True, help='输出文件前缀')
 # parser.add_argument('-l', '--length', type=int, default=150, help='reads长度')
 parser.add_argument('-b', '--breakpoint', type=int, required=True, help='断点位置')
-parser.add_argument('-r', '--read', type=int, default=2000, help='pair reads数量')
+parser.add_argument('--span-reads', type=int, default=2000, help='span reads数量')
+parser.add_argument('--normal-reads', type=int, default=2000, help='normal reads数量')
+parser.add_argument('--split-reads', type=int, default=2000, help='split reads数量')
 # parser.add_argument('--fa', action='store_true',help="输入的序列是fasta格式")
 args = parser.parse_args()
 
@@ -24,7 +26,9 @@ fusion_seq = read_fasta(args.fasta)
 all_len =  len(fusion_seq)
 # read_length = args.length
 read_length = 150
-num_reads = args.read # 配对读长数量
+num_span_reads = args.span_reads  # span 配对读长数量
+num_normal_reads = args.normal_reads  # normal 配对读长数量
+num_split_reads = args.split_reads  # split 配对读长数量
 error_rate = 0.001  # 0.1% 错误率
 fusion_breakpoint = args.breakpoint  # 断点位置（chr10 和 chr8 拼接处）
 output_span_fastq1 = args.name + "_span_R1.fastq" 
@@ -65,9 +69,8 @@ def generate_read_name(read_num, is_read1=True):
     barcode = ''.join(random.choice('ACTG') for _ in range(8)) + '+' + ''.join(random.choice('ACTG') for _ in range(8))
     return f"@{instrument}:{run_id}:{flowcell}:{lane}:{tile}:{x_coord}:{y_coord} {read_id}:{filter_flag}:{control_number}:{barcode}"
 
-# 生成配对span FASTQ 文件
 with open(output_span_fastq1, "w") as f1, open(output_span_fastq2, "w") as f2:
-    for i in range(num_reads):
+    for i in range(num_span_reads):
         insert_size = random.randint(100, 370)
         steps = random.randint(10, 140)
         # start1 = len(fusion_seq) - read_length - insert_size
@@ -88,7 +91,7 @@ with open(output_span_fastq1, "w") as f1, open(output_span_fastq2, "w") as f2:
 
 # 生成配对normal FASTQ 文件
 with open(output_nor_fastq1, "w") as f1, open(output_nor_fastq2, "w") as f2:
-    for i in range(num_reads):
+    for i in range(num_normal_reads):
         insert_size = random.randint(100, 370)
         normal_seq = fusion_seq[:fusion_breakpoint] if random.random() < nor_rate else fusion_seq[fusion_breakpoint:]
         
@@ -108,7 +111,7 @@ with open(output_nor_fastq1, "w") as f1, open(output_nor_fastq2, "w") as f2:
 
 # 生成配对split FASTQ 文件
 with open(output_split_fastq1, "w") as f1, open(output_split_fastq2, "w") as f2:
-    for i in range(num_reads):
+    for i in range(num_split_reads):
         insert_size = random.randint(100, 370)
         break_pos = random.randint(1, 50)
         break_read = "R1" if random.random() < 0.5 else "R2"
