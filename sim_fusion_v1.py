@@ -10,7 +10,7 @@ def read_fasta(file_path):
     return sequence
 
 
-parser = argparse.ArgumentParser(description="生成fusion相关span序列")
+parser = argparse.ArgumentParser(description="生成fusion相关序列")
 parser.add_argument('-f', '--fasta', required=True, help='输入的Fasta文件路径')
 parser.add_argument('-n', '--name', required=True, help='输出文件前缀')
 # parser.add_argument('-l', '--length', type=int, default=150, help='reads长度')
